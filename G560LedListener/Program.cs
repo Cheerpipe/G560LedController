@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.Win32;
 using G560Led;
 using System;
@@ -54,11 +54,11 @@ namespace G560LedListener
 
             if (args.Contains("--shutdown"))
             {
-                G560LedControllerLoader.Devices[devIndex].SetColor(Color.FromArgb(255, 0, 0, 0), 0);
-                G560LedControllerLoader.Devices[devIndex].SetColor(Color.FromArgb(255, 0, 0, 0), 1);
-                G560LedControllerLoader.Devices[devIndex].SetColor(Color.FromArgb(255, 0, 0, 0), 2);
-                G560LedControllerLoader.Devices[devIndex].SetColor(Color.FromArgb(255, 0, 0, 0), 3);
-
+                G560LedControllerLoader.Devices[2].SetColor(Color.FromArgb(255, 0, 0, 0), 0);
+                G560LedControllerLoader.Devices[2].SetColor(Color.FromArgb(255, 0, 0, 0), 1);
+                G560LedControllerLoader.Devices[2].SetColor(Color.FromArgb(255, 0, 0, 0), 2);
+                G560LedControllerLoader.Devices[2].SetColor(Color.FromArgb(255, 0, 0, 0), 3);
+                G560LedControllerLoader.Devices[2].ForceApply();
             }
             else
             {
