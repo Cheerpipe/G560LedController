@@ -52,6 +52,11 @@ namespace G560Led
             _newColors[zone] = color;
         }
 
+        public void ForceApply()
+        {
+            SendColors(null);
+        }
+
         private void SendColors(object state)
         {
             for (byte i = 0; i < 4; i++)
