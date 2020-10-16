@@ -1,1 +1,1 @@
-G560LedController
+PowerPlayLedController
