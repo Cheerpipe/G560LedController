@@ -1,4 +1,4 @@
-﻿using Device.Net;
+using Device.Net;
 using Hid.Net.Windows;
 using System;
 using System.Collections.Generic;
@@ -14,7 +14,6 @@ namespace G560Led
         private Dictionary<byte, Color> _currentColors = new Dictionary<byte, Color>();
         private Dictionary<byte, Color> _newColors = new Dictionary<byte, Color>();
         private WindowsHidDevice _device;
-
         public G560LedController(IDevice device)
         {
             Initialize(device);
@@ -51,7 +50,6 @@ namespace G560Led
                 return;
             _newColors[zone] = color;
         }
-
         public void ForceApply()
         {
             SendColors(null);
@@ -62,7 +60,9 @@ namespace G560Led
             for (byte i = 0; i < 4; i++)
             {
                 if (_newColors[i] == _currentColors[i])
+                {
                     return;
+                }
 
                 usb_buf[04] = i;
                 usb_buf[06] = _newColors[i].R;
@@ -73,12 +73,12 @@ namespace G560Led
                 {
                     try
                     {
-                        _device.WriteAsync(usb_buf).Wait(4);
+                        _device.WriteAsync(usb_buf).Wait(40);
                         _currentColors[i] = _newColors[i];
                         pending = false;
-                        Thread.Sleep(2);
                     }
-                    catch { Thread.Sleep(2); }
+                    catch { }
+                    Thread.Sleep(1);
                 }
             }
         }
