@@ -2,6 +2,7 @@ using Device.Net;
 using Hid.Net.Windows;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Net;
 using System.Threading;
@@ -41,7 +42,7 @@ namespace G560Led
             _newColors[1] = Color.Black;
             _newColors[2] = Color.Black;
             _newColors[3] = Color.Black;
-            _sendTimer = new Timer(new TimerCallback(SendColors), null, 50, 50);
+            _sendTimer = new Timer(new TimerCallback(SendColors), null, 16, 50);
         }
 
         public void SetColor(Color color, byte zone)
@@ -61,7 +62,8 @@ namespace G560Led
             {
                 if (_newColors[i] == _currentColors[i])
                 {
-                    return;
+                    Debug.WriteLine(i);
+                    continue;
                 }
 
                 usb_buf[04] = i;
@@ -73,7 +75,7 @@ namespace G560Led
                 {
                     try
                     {
-                        _device.WriteAsync(usb_buf).Wait(40);
+                        _device.WriteAsync(usb_buf).Wait(10);
                         _currentColors[i] = _newColors[i];
                         pending = false;
                     }
