@@ -56,13 +56,15 @@ namespace G560Led
             SendColors(null);
         }
 
+        int retryCount = 0;
+        int maxRetryCount = 3;
+        bool changeOk = false;
         private void SendColors(object state)
         {
             for (byte i = 0; i < 4; i++)
             {
                 if (_newColors[i] == _currentColors[i])
                 {
-                    Debug.WriteLine(i);
                     continue;
                 }
 
@@ -70,17 +72,24 @@ namespace G560Led
                 usb_buf[06] = _newColors[i].R;
                 usb_buf[07] = _newColors[i].G;
                 usb_buf[08] = _newColors[i].B;
-                bool pending = true;
-                while (pending)
+                changeOk = false;
+                retryCount = 0;
+                while (!changeOk)
                 {
                     try
                     {
-                        _device.WriteAsync(usb_buf).Wait(10);
+                        _device.WriteAsync(usb_buf).Wait();
                         _currentColors[i] = _newColors[i];
-                        pending = false;
+                        changeOk = true;
                     }
-                    catch { }
-                    Thread.Sleep(1);
+                    catch
+                    {
+                        Debug.WriteLine("Error") ;
+                        retryCount++;
+                        if (retryCount >= maxRetryCount)
+                            continue;
+                    }
+                    Thread.Sleep(4);
                 }
             }
         }
