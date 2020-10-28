@@ -11,7 +11,7 @@ namespace G560Led
 {
     public class G560LedController : IDisposable
     {
-        byte[] usb_buf = new byte[20];
+        private byte[] usb_buf = new byte[20];
         private Dictionary<byte, Color> _currentColors = new Dictionary<byte, Color>();
         private Dictionary<byte, Color> _newColors = new Dictionary<byte, Color>();
         private WindowsHidDevice _device;
@@ -25,13 +25,48 @@ namespace G560Led
         {
             _device = (WindowsHidDevice)device;
             _device.InitializeAsync().Wait();
-            usb_buf[0] = 0x11;
+
+            //Initialize Base
+            usb_buf[00] = 0x11;
             usb_buf[01] = 0xFF;
             usb_buf[02] = 0x04;
-            usb_buf[03] = 0x3C;
-            //usb_buf[0x04] = 0x00; //Canal
+
+            //Initialize 3E
+            usb_buf[03] = 0x3E;
+            usb_buf[04] = 0x00;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+            usb_buf[04] = 0x01;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+            usb_buf[04] = 0x02;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+            usb_buf[04] = 0x03;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+
+
+            //Initialize CE
+            usb_buf[03] = 0xCE;
+            usb_buf[04] = 0x02;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+            usb_buf[04] = 0x01;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+            usb_buf[04] = 0x03;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+            usb_buf[04] = 0x00;
+            _device.WriteAsync(usb_buf).Wait();
+            Thread.Sleep(20);
+
+            //Initialize Send Lights
+            usb_buf[03] = 0x3E;
             usb_buf[05] = 0x01; //Mode
             usb_buf[09] = 0x02;
+
 
             _currentColors[0] = Color.Black;
             _currentColors[1] = Color.Black;
@@ -42,7 +77,7 @@ namespace G560Led
             _newColors[1] = Color.Black;
             _newColors[2] = Color.Black;
             _newColors[3] = Color.Black;
-            _sendTimer = new Timer(new TimerCallback(SendColors), null, 16, 50);
+            _sendTimer = new Timer(new TimerCallback(SendColors), null, 55, 55);
         }
 
         public void SetColor(Color color, byte zone)
@@ -56,41 +91,45 @@ namespace G560Led
             SendColors(null);
         }
 
-        int retryCount = 0;
-        int maxRetryCount = 3;
-        bool changeOk = false;
         private void SendColors(object state)
         {
+            byte retryCount;
+            const byte maxRetryCount = 2;
+            bool changeOk;
+
             for (byte i = 0; i < 4; i++)
             {
-                if (_newColors[i] == _currentColors[i])
-                {
-                    continue;
-                }
-
                 usb_buf[04] = i;
                 usb_buf[06] = _newColors[i].R;
                 usb_buf[07] = _newColors[i].G;
                 usb_buf[08] = _newColors[i].B;
                 changeOk = false;
                 retryCount = 0;
-                while (!changeOk)
+                do
                 {
+
                     try
                     {
+                        if (_newColors[i] == _currentColors[i])
+                        {
+                            break;
+                        }
                         _device.WriteAsync(usb_buf).Wait();
                         _currentColors[i] = _newColors[i];
                         changeOk = true;
                     }
                     catch
                     {
-                        Debug.WriteLine("Error") ;
                         retryCount++;
                         if (retryCount >= maxRetryCount)
-                            continue;
+                            break;
                     }
-                    Thread.Sleep(4);
-                }
+                    finally
+                    {
+                        Thread.Sleep(1);
+                    }
+
+                } while (!changeOk);
             }
         }
         public void Dispose()
